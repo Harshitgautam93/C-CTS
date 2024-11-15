@@ -1,0 +1,67 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+int main() {
+    int initialBalance;
+    cin >> initialBalance;
+
+    int operationsCount;
+    cin >> operationsCount;
+    cin.ignore(); // Clear the newline from the input buffer
+
+    int balance = initialBalance;
+    vector<int> transactions; // Stores uncommitted transactions
+    vector<int> commits;      // Stores balance after each commit
+
+    for (int i = 0; i < operationsCount; ++i) {
+        string operation;
+        getline(cin, operation);
+
+        if (operation == "read") {
+            // Display the current account balance
+              cout << balance << endl; // No extra spaces, single newline
+        } 
+        else if (operation.rfind("credit", 0) == 0) {
+            // Perform credit operation
+            int amount = stoi(operation.substr(7));
+            balance += amount;
+            transactions.push_back(amount); // Record positive transaction
+        } 
+        else if (operation.rfind("debit", 0) == 0) {
+            // Perform debit operation
+            int amount = stoi(operation.substr(6));
+            balance -= amount;
+            transactions.push_back(-amount); // Record negative transaction
+        } 
+        else if (operation.rfind("abort", 0) == 0) {
+           // Abort the specified transaction
+            int transactionIndex = stoi(operation.substr(6)) - 1; // Convert to zero-based index
+            if (transactionIndex >= 0 && 
+                static_cast<size_t>(transactionIndex) < transactions.size() && 
+                commits.empty()) {
+                balance -= transactions[transactionIndex];
+                transactions.erase(transactions.begin() + transactionIndex);
+            }
+        } 
+        else if (operation.rfind("rollback", 0) == 0) {
+            // Roll back to a specific commit point
+            int commitIndex = stoi(operation.substr(9)) - 1; // Convert to zero-based index
+            if (commitIndex >= 0 && 
+                static_cast<size_t>(commitIndex) < commits.size()) {
+                balance = commits[commitIndex];
+                transactions.clear(); // Discard all uncommitted transactions
+                commits.resize(commitIndex + 1); // Keep commits up to this point
+            }
+        } 
+        else if (operation == "commit") {
+            // Save current balance as a committed state
+            commits.push_back(balance);
+            transactions.clear();
+                }
+    }
+
+    return 0;
+}
